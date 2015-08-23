@@ -1,19 +1,27 @@
+chrome.runtime.onMessage.addListener(
+    function(request, sender, sendResponse) {
+        if (request.message == "addColumnToNewDatabase") {
+            sendResponse({message: "readyToAddColumn"});
+
+        }
+});
+
 //Cancel all mouseover and click events; when a user clicks (for example) a hyperlink,
-//we wan't the link to be selected, but we don't want the href to be opened.
+//we want the link to be selected, but we don't want the hyperlink reference to be opened.
 $('body').on('click', function(e) {
     e.preventDefault();
 });
 $('body').on('mouseover', false);
 
 //add event listener for element selection click
-document.addEventListener("click", printMousePos);
+document.addEventListener('click', printMousePos);
 
 function printMousePos(e) {
     
     //get target element and print xpath of the element
     var elementMouseIsOver = e.target;
     var x = getXPath(elementMouseIsOver);
-    $(elementMouseIsOver).css("text-shadow","0 0 3px #0dcaff");
+    $(elementMouseIsOver).css('box-shadow', '0 0 5px #0dcaff');
 
 }
 
