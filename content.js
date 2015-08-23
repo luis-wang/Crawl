@@ -1,8 +1,7 @@
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.message == "addColumnToNewDatabase") {
-            sendResponse({message: "readyToAddColumn"});
-
+            // sendResponse({message: "readyToAddColumn"});
         }
 });
 

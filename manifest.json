@@ -10,10 +10,6 @@
 		"128": "resources/icon_128.png"
 	},
 
-	"background": {
-		"scripts": ["background.js"]
-	},
-
 	"content_scripts": [{
 		"matches": ["http://*/*", "https://*/*"],
       	"js": ["content.js", "resources/jquery.min.js"],
