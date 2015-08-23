@@ -12,7 +12,7 @@
 
 	"content_scripts": [{
 		"matches": ["http://*/*", "https://*/*"],
-      	"js": ["content.js", "resources/jquery.min.js"],
+      	"js": ["resources/jquery.min.js", "content.js"],
       	"run_at": "document_end"
 	}],
 
