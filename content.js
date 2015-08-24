@@ -95,30 +95,32 @@ document.addEventListener("mouseout", function(e) {
 document.addEventListener('click', printMousePos);
 
 var firstClick;
-var secondClick;
-var thirdClick;
+// var secondClick;
+// var thirdClick;
 
 //get target element and print xpath of the element
 function printMousePos(e) {
 
     if (firstClick == null) {
         firstClick = getXPath(e.target);
-    }
-    else if (secondClick == null) {
-        secondClick = getXPath(e.target);
-        alert(matchShortestCommonXPath(firstClick, secondClick));
-    }
-    else if (thirdClick == null) {
-        thirdClick = getXPath(e.target);
-    }
+    } 
+    // else if (secondClick == null) {
+    //     secondClick = getXPath(e.target);
+    //     alert(matchShortestCommonXPath(firstClick, secondClick));
+    // }
+    // else if (thirdClick == null) {
+    //     thirdClick = getXPath(e.target);
+    // }
     else {
-        var fourthClick = getXPath(e.target);
+        var secondClick = getXPath(e.target);
 
         var firstFinalXPath = matchShortestCommonXPath(firstClick, secondClick);
-        var secondFinalXPath = matchShortestCommonXPath(thirdClick, fourthClick);
+        // var secondFinalXPath = matchShortestCommonXPath(thirdClick, fourthClick);
 
-        var columnNames = ['phone_name', 'storage_capacity'];
-        var XPaths = [firstFinalXPath, secondFinalXPath];
+        alert(firstFinalXPath);
+
+        var columnNames = ['swagcolumn'];
+        var XPaths = [firstFinalXPath];
 
         Crawl(columnNames, XPaths);
     }
@@ -165,7 +167,7 @@ function getXPath(targetNode) {
                         'class' : null,
                         'number' : null};
 
-        if (segment.type != 'td') {
+        if (segment.type != 'td' && segment.type != 'table') {
             if (targetNode.hasAttribute('id')) {
                 segment.id = targetNode.getAttribute('id');
             }
@@ -240,7 +242,8 @@ function matchShortestCommonXPath(XPathSegments1, XPathSegments2) {
             //We assume that the type of the segment in both arrays is the same. (this is almost always the case)
             var finalSegment = {'type' : XPathSegments1[i].type,
                                 'id' : null,
-                                'class' : null};
+                                'class' : null,
+                                'number' : null};
 
             //Add class if classes match
             if (segment1.class == segment2.class) {
@@ -251,6 +254,12 @@ function matchShortestCommonXPath(XPathSegments1, XPathSegments2) {
             if (segment1.id == segment2.id) {
                 finalSegment.id = segment1.id;
             }
+
+            //Add number if numbers match
+            if (segment1.number == segment2.number) {
+                finalSegment.number = segment1.number;
+            }
+
             result.push(finalSegment);
         }
 
