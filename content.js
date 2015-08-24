@@ -1,7 +1,3 @@
-var toType = function(obj) {
-    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
-}
-
 function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
     var returnArray = [];
@@ -30,34 +26,48 @@ function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
     }
 
-    return JSON.stringify(returnArray);
+    return returnArray;
 
 }
 
-function Crawl(columnNames, XPaths) {
+function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData) {
 
     // $('body').append('<div id="CrawlScrapeContentDiv" style="width:100%; height: 100%; background-color: red"></div>');
 
-    // $('#CrawlScrapeContentDiv').load(document.URL, function(response, status, xhr) {
+    // $('#CrawlScrapeContentDiv').load('https://nrc.nl', function(response, status, xhr) {
     //     if (status != "error") {
+
     //         var HTMLString = $('#CrawlScrapeContentDiv').html();
-            
+        
     //         var parser = new DOMParser();
     //         var HTMLDocument = parser.parseFromString(HTMLString, "text/html");
 
-    //         console.log('type: ' + toType(HTMLDocument));
+    //         var title = getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument);
+    //         console.log(title);
 
-    //         console.log(HTMLDocument.documentElement.innerHTML);
     //     }
     // });
 
-    $.get(document.URL, function(HTMLString) {
+    $.get(URL, function(HTMLString) {
 
         var parser = new DOMParser();
         var HTMLDocument = parser.parseFromString(HTMLString, "text/html");
 
-        var title = getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument);
-        console.log(title);
+        var pageData = getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument);
+
+        if (alreadyCrawledData == null)
+            alreadyCrawledData = pageData;
+        else
+            alreadyCrawledData = alreadyCrawledData.concat(pageData);
+
+        var result = document.evaluate(paginationXPath, HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+        var nextPageNode = result.iterateNext();
+        if (nextPageNode == null || nextPageNode.textContent == null || nextPageNode.textContent == '#') {
+            console.log(JSON.stringify(alreadyCrawledData));
+        }
+        else {
+            return Crawl(nextPageNode.textContent, columnNames, XPaths, paginationXPath, alreadyCrawledData);
+        }
 
     }, 'html');
 
@@ -78,6 +88,7 @@ $('body').on('click', function(e) {
 });
 
 document.addEventListener("mouseover", function( event ) {   
+
     // highlight the mouseover target
     if(!$(event.target).data('originalborder')) {
         $(event.target).data('originalborder', event.target.style.border);
@@ -95,67 +106,28 @@ document.addEventListener("mouseout", function(e) {
 document.addEventListener('click', printMousePos);
 
 var firstClick;
-// var secondClick;
-// var thirdClick;
+var secondClick;
 
 //get target element and print xpath of the element
 function printMousePos(e) {
 
     if (firstClick == null) {
         firstClick = getXPath(e.target);
-    } 
-    // else if (secondClick == null) {
-    //     secondClick = getXPath(e.target);
-    //     alert(matchShortestCommonXPath(firstClick, secondClick));
-    // }
-    // else if (thirdClick == null) {
-    //     thirdClick = getXPath(e.target);
-    // }
+    }
+    else if (secondClick == null) {
+        secondClick = getXPath(e.target);
+    }
     else {
-        var secondClick = getXPath(e.target);
+        var paginationClick = getXPath(e.target);
+        var paginationXPath = matchShortestCommonXPath(paginationClick, paginationClick) + '/@href';
 
         var firstFinalXPath = matchShortestCommonXPath(firstClick, secondClick);
-        // var secondFinalXPath = matchShortestCommonXPath(thirdClick, fourthClick);
-
-        alert(firstFinalXPath);
-
         var columnNames = ['swagcolumn'];
         var XPaths = [firstFinalXPath];
-
-        Crawl(columnNames, XPaths);
+        Crawl(document.URL, columnNames, XPaths, paginationXPath, null);
     }
 
-    // $(elementMouseIsOver).css('box-shadow', '0 0 5px #0dcaff');
 }
-
-/*
-//standard element object to xpath string function
-function getXPath(targetNode) { 
-    var allNodes = document.getElementsByTagName('*'); 
-    for (var segs = []; targetNode && targetNode.nodeType == 1; targetNode = targetNode.parentNode) 
-    { 
-        if (targetNode.hasAttribute('id')) { 
-                var uniqueIdCount = 0; 
-                for (var n=0;n < allNodes.length;n++) { 
-                    if (allNodes[n].hasAttribute('id') && allNodes[n].id == targetNode.id) uniqueIdCount++; 
-                    if (uniqueIdCount > 1) break; 
-                }; 
-                if ( uniqueIdCount == 1) { 
-                    segs.unshift('id("' + targetNode.getAttribute('id') + '")'); 
-                    return segs.join('/'); 
-                } else { 
-                    segs.unshift(targetNode.localName.toLowerCase() + '[@id="' + targetNode.getAttribute('id') + '"]'); 
-                } 
-        } else if (targetNode.hasAttribute('class')) { 
-            segs.unshift(targetNode.localName.toLowerCase() + '[@class="' + targetNode.getAttribute('class') + '"]'); 
-        } else { 
-            for (i = 1, sib = targetNode.previousSibling; sib; sib = sib.previousSibling) { 
-                if (sib.localName == targetNode.localName)  i++; }; 
-                segs.unshift(targetNode.localName.toLowerCase() + '[' + i + ']'); 
-        }; 
-    }; 
-    return segs.length ? '/' + segs.join('/') : null; 
-}; */
 
 //xpath segment lookup
 function getXPath(targetNode) {
@@ -268,17 +240,4 @@ function matchShortestCommonXPath(XPathSegments1, XPathSegments2) {
     var resulttext = segmentsToXPathText(result);
 
     return resulttext;
-}
-
-//xpath text of target node
-function nodeToXPathText(targetNode) {
-    var xpathSegments = getXPath(targetNode);
-    return segmentsToXPathText(xpathSegments);
-}
-
-//standard xpath element parsing function
-function lookupElementByXPath(path) { 
-    var evaluator = new XPathEvaluator(); 
-    var result = evaluator.evaluate(path, document.documentElement, null,XPathResult.FIRST_ORDERED_NODE_TYPE, null); 
-    return  result.singleNodeValue; 
 }
