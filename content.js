@@ -76,7 +76,20 @@ chrome.runtime.onMessage.addListener(
 $('body').on('click', function(e) {
    e.preventDefault();
 });
-$('body').on('mouseover', false);
+
+document.addEventListener("mouseover", function( event ) {   
+    // highlight the mouseover target
+    if(!$(event.target).data('originalborder')) {
+        $(event.target).data('originalborder', event.target.style.border);
+    }
+    event.target.style.border = "2px solid #0dcaff";
+
+}, false);
+
+
+document.addEventListener("mouseout", function(e) { 
+    e.target.style.border = $(e.target).data('originalborder');
+}, false);
 
 //add event listener for element selection click
 document.addEventListener('click', printMousePos);
@@ -93,6 +106,7 @@ function printMousePos(e) {
     }
     else if (secondClick == null) {
         secondClick = getXPath(e.target);
+        alert(matchShortestCommonXPath(firstClick, secondClick));
     }
     else if (thirdClick == null) {
         thirdClick = getXPath(e.target);
@@ -148,13 +162,23 @@ function getXPath(targetNode) {
 
         var segment =   {'type' : targetNode.localName,
                         'id' : null,
-                        'class' : null};
+                        'class' : null,
+                        'number' : null};
 
-        if (targetNode.hasAttribute('id')) {
-            segment.id = targetNode.getAttribute('id');
+        if (segment.type != 'td') {
+            if (targetNode.hasAttribute('id')) {
+                segment.id = targetNode.getAttribute('id');
+            }
+            if (targetNode.hasAttribute('class')) {
+                segment.class = targetNode.getAttribute('class');
+            }
         }
-        if (targetNode.hasAttribute('class')) {
-            segment.class = targetNode.getAttribute('class');
+        else {
+            for (i = 1, sib = targetNode.previousSibling; sib; sib = sib.previousSibling) { 
+                if (sib.localName == targetNode.localName)
+                    i++;
+            }
+            segment.number = i;
         }
 
         xpathSegments.push(segment);
@@ -174,25 +198,23 @@ function segmentsToXPathText(XPathSegments) {
 
     if (XPathSegments.length > 0) {
 
-        var textToReturn = '//';
+        var textToReturn = '/';
 
         for (var i = 0; i < XPathSegments.length; i++) {
+
             var segment = XPathSegments[i];
-            textToReturn += segment.type;
-            if (segment.id != null) {
-                textToReturn += '[@id="';
-                textToReturn += segment.id;
-                textToReturn += '"]';
+            textToReturn += '/' + segment.type;
+
+            if (segment.number != null) {
+                textToReturn += '[' + segment.number + ']';
+            }
+            else if (segment.id != null) {
+                textToReturn += '[@id="' + segment.id + '"]';
             }
             else if (segment.class != null) {
-                textToReturn += '[@class="';
-                textToReturn += segment.class;
-                textToReturn += '"]';
+                textToReturn += '[@class="' + segment.class + '"]';
             }
 
-            if (i != XPathSegments.length - 1) {
-                textToReturn += '/';
-            }
         }
 
         return textToReturn;
