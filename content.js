@@ -1,21 +1,40 @@
 var toType = function(obj) {
-  return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+    return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
 }
 
-function getInnerHTMLFromXPath(XPath, HTMLDocument) {
+function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
-    var result = document.evaluate(XPath, document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+    var returnArray = [];
 
-    var nodes = [];
-    for (var node = result.iterateNext(); node != null; node = result.iterateNext()) {
-        nodes.push(node.textContent);
+    for (var i = 0; i < XPaths.length; i++) {
+
+        var result = document.evaluate(XPaths[i], HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+
+        var elementCount = 0;
+        for (var node = result.iterateNext(); node != null; node = result.iterateNext()) {
+
+            if (i == 0) {
+                var object = {};
+                object[columnNames[0]] = node.textContent;
+                returnArray.push(object);
+            }
+            else {
+                var object = returnArray[elementCount];
+                object[columnNames[i]] = node.textContent;
+                returnArray[elementCount] = object;
+            }
+
+            elementCount++;
+
+        }
+
     }
 
-    return nodes;
+    return JSON.stringify(returnArray);
 
 }
 
-function Crawl(XPath) {
+function Crawl(columnNames, XPaths) {
 
     // $('body').append('<div id="CrawlScrapeContentDiv" style="width:100%; height: 100%; background-color: red"></div>');
 
@@ -37,9 +56,7 @@ function Crawl(XPath) {
         var parser = new DOMParser();
         var HTMLDocument = parser.parseFromString(HTMLString, "text/html");
 
-        console.log(HTMLDocument.documentElement.innerHTML);
-
-        var title = getInnerHTMLFromXPath(XPath, HTMLDocument);
+        var title = getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument);
         console.log(title);
 
     }, 'html');
@@ -65,6 +82,8 @@ $('body').on('mouseover', false);
 document.addEventListener('click', printMousePos);
 
 var firstClick;
+var secondClick;
+var thirdClick;
 
 //get target element and print xpath of the element
 function printMousePos(e) {
@@ -72,12 +91,22 @@ function printMousePos(e) {
     if (firstClick == null) {
         firstClick = getXPath(e.target);
     }
+    else if (secondClick == null) {
+        secondClick = getXPath(e.target);
+    }
+    else if (thirdClick == null) {
+        thirdClick = getXPath(e.target);
+    }
     else {
-        var secondClick = getXPath(e.target);
-        var finalXPath = matchShortestCommonXPath(firstClick, secondClick);
-        // console.log(matchShortestCommonXPath);
-        console.log(segmentsToXPathText(secondClick));
-        Crawl(finalXPath);
+        var fourthClick = getXPath(e.target);
+
+        var firstFinalXPath = matchShortestCommonXPath(firstClick, secondClick);
+        var secondFinalXPath = matchShortestCommonXPath(thirdClick, fourthClick);
+
+        var columnNames = ['phone_name', 'storage_capacity'];
+        var XPaths = [firstFinalXPath, secondFinalXPath];
+
+        Crawl(columnNames, XPaths);
     }
 
     // $(elementMouseIsOver).css('box-shadow', '0 0 5px #0dcaff');

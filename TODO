@@ -1,38 +1,53 @@
-draw invisible divs over iframes. (iframe click behaviour can't be prevented)
-
-
-
-
 -------------------------
 --------- 1.0.0 ---------
 -------------------------
 
 database aanmaken
+
 database verwijderen
-meerdere pagina's crawlen
-velden toevoegen / verwijderen aan / uit database
-data opslaan in .json
-data exporteren
+
+meerdere pagina's crawlen via pagination
+
+velden toevoegen aan / verwijderen uit database
+
+data met chrome opslaan in .json
+
+data kunnen downloaded naar lokaal bestand in filesystem
+
+draw invisible divs over iframes. (iframe click behaviour can't be prevented)
+
+
 
 -------------------------
 --------- 2.0.0 ---------
 -------------------------
 
 media kunnen crawlen
+
 subpages kunnen crawlen
+
 databases updaten
+
 data kunnen bekijken
+
 exporteren in meerdere bestandsformaten (json, csv, sql)
+
 eventueel overstappen van local naar chrome storage
+
+
 
 -------------------------
 --------- 3.0.0 ---------
 -------------------------
 
 accountsysteem met backend in python
+
 backend kunnen laten crawlen / automatisch updaten
+
 API om data op te vragen
+
 backend connecten met de chrome extensie
+
 passwords opslaan in md5
 
 chrome exstensie wordt vanaf deze versie echt een toevoeging aan het backend.
