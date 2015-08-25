@@ -83,7 +83,7 @@ function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData, re
         else {
 
             d = new Date();
-            var delayTime = 1000 + d.getTime() - time;
+            var delayTime = 1000 - d.getTime() + time;
 
             setTimeout(function() {
                 Crawl(nextPageNode.textContent, columnNames, XPaths, paginationXPath, alreadyCrawledData, requestNumber);
@@ -163,14 +163,18 @@ function getXPath(targetNode) {
         var segment =   {'type' : targetNode.localName,
                         'id' : null,
                         'class' : null,
-                        'number' : null};
+                        'number' : null,
+                        'rel' : null};
 
         if (segment.type != 'td' && segment.type != 'table') {
             if (targetNode.hasAttribute('id')) {
                 segment.id = targetNode.getAttribute('id');
             }
-            if (targetNode.hasAttribute('class')) {
+            else if (targetNode.hasAttribute('class')) {
                 segment.class = targetNode.getAttribute('class');
+            }
+            else if (targetNode.hasAttribute('rel')) {
+                segment.rel = targetNode.getAttribute('rel');
             }
         }
         else {
@@ -214,6 +218,9 @@ function segmentsToXPathText(XPathSegments) {
             else if (segment.class != null) {
                 textToReturn += '[@class="' + segment.class + '"]';
             }
+            else if (segment.rel != null) {
+                textToReturn += '[@rel="' + segment.rel + '"]';
+            }
 
         }
 
@@ -241,7 +248,9 @@ function matchShortestCommonXPath(XPathSegments1, XPathSegments2) {
             var finalSegment = {'type' : XPathSegments1[i].type,
                                 'id' : null,
                                 'class' : null,
-                                'number' : null};
+                                'number' : null,
+                                'rel' : null};
+
 
             //Add class if classes match
             if (segment1.class == segment2.class) {
@@ -256,6 +265,11 @@ function matchShortestCommonXPath(XPathSegments1, XPathSegments2) {
             //Add number if numbers match
             if (segment1.number == segment2.number) {
                 finalSegment.number = segment1.number;
+            }
+
+            //Add rel if rels match
+            if (segment1.rel == segment2.rel) {
+                finalSegment.rel = segment1.rel;
             }
 
             result.push(finalSegment);
