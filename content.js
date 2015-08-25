@@ -1,3 +1,12 @@
+//Constanst
+
+//Maximum number of pages the crawler will load
+var kMaxPages = 10;
+//Delay time between two requests in milliseconds
+var kDelayTimeBetweenRequest = 1000;
+
+//Functions
+
 function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
     var returnArray = [];
@@ -30,7 +39,7 @@ function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
 }
 
-function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData) {
+function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData, requestNumber) {
 
     // $('body').append('<div id="CrawlScrapeContentDiv" style="width:100%; height: 100%; background-color: red"></div>');
 
@@ -50,6 +59,12 @@ function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData) {
 
     $.get(URL, function(HTMLString) {
 
+        var d = new Date();
+        var time = d.getTime();
+
+        requestNumber++;
+        console.log(requestNumber);
+
         var parser = new DOMParser();
         var HTMLDocument = parser.parseFromString(HTMLString, "text/html");
 
@@ -62,11 +77,17 @@ function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData) {
 
         var result = document.evaluate(paginationXPath, HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
         var nextPageNode = result.iterateNext();
-        if (nextPageNode == null || nextPageNode.textContent == null || nextPageNode.textContent == '#') {
+        if (requestNumber >= kMaxPages || nextPageNode == null || nextPageNode.textContent == null || nextPageNode.textContent == '#') {
             console.log(JSON.stringify(alreadyCrawledData));
         }
         else {
-            return Crawl(nextPageNode.textContent, columnNames, XPaths, paginationXPath, alreadyCrawledData);
+
+            d = new Date();
+            var delayTime = 1000 + d.getTime() - time;
+
+            setTimeout(function() {
+                Crawl(nextPageNode.textContent, columnNames, XPaths, paginationXPath, alreadyCrawledData, requestNumber);
+            }, delayTime);
         }
 
     }, 'html');
@@ -124,7 +145,7 @@ function printMousePos(e) {
         var firstFinalXPath = matchShortestCommonXPath(firstClick, secondClick);
         var columnNames = ['swagcolumn'];
         var XPaths = [firstFinalXPath];
-        Crawl(document.URL, columnNames, XPaths, paginationXPath, null);
+        Crawl(document.URL, columnNames, XPaths, paginationXPath, null, 0);
     }
 
 }
