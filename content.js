@@ -87,7 +87,10 @@ function Crawl(URL, columnNames, XPaths, e, alreadyCrawledData, requestNumber) {
         var nextPageHyperlink = document.evaluate(paginationXPath, HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
 
         if (requestNumber >= kMaxPages || nextPageHyperlink == null || nextPageHyperlink.textContent == null || nextPageHyperlink.textContent == '#') {
-            console.log(JSON.stringify(alreadyCrawledData));
+            for (var i = 0; i < alreadyCrawledData.length; i++) {
+                console.log('data: ' + alreadyCrawledData[i]['swagcolumn'] + '\n');
+            }
+            // console.log(JSON.stringify(alreadyCrawledData));
         }
         else {
             d = new Date();
@@ -251,12 +254,12 @@ function getXPath(targetNode) {
 //make normal text out of segment array
 function segmentsToXPathText(XPathSegments) {
 
-    XPathSegments.reverse();
-
     if (XPathSegments.length > 0) {
 
-        var textToReturn = '/';
+        XPathSegments = XPathSegments.slice(0, XPathSegments.length < 5 ? XPathSegments : 5);
+        XPathSegments.reverse();
 
+        var textToReturn = '/';
         for (var i = 0; i < XPathSegments.length; i++) {
 
             var segment = XPathSegments[i];
