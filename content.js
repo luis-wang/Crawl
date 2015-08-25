@@ -97,30 +97,35 @@ function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData, re
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.message == "addColumnToNewDatabase") {
+            toggleClick = true;
             sendResponse({message: "readyToAddColumn"});
         }
     }
 );
 
+var toggleClick = false;
 //Cancel all mouseover and click events; when a user clicks (for example) a hyperlink,
 //we want the link to be selected, but we don't want the hyperlink reference to be opened.
 $('body').on('click', function(e) {
-   e.preventDefault();
+   if(toggleClick==true)
+        e.preventDefault();
 });
 
 document.addEventListener("mouseover", function( event ) {   
-
-    // highlight the mouseover target
-    if(!$(event.target).data('originalborder')) {
-        $(event.target).data('originalborder', event.target.style.border);
+    if(toggleClick==true) {
+        // highlight the mouseover target
+        if(!$(event.target).data('originalborder')) {
+            $(event.target).data('originalborder', event.target.style.border);
+        }
+        event.target.style.border = "2px solid #0dcaff";
     }
-    event.target.style.border = "2px solid #0dcaff";
-
 }, false);
 
 
 document.addEventListener("mouseout", function(e) { 
-    e.target.style.border = $(e.target).data('originalborder');
+    if(toggleClick==true) {
+        e.target.style.border = $(e.target).data('originalborder');
+    }
 }, false);
 
 //add event listener for element selection click
