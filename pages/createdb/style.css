@@ -74,8 +74,19 @@ input:focus {
     -webkit-transition-property: color, background-color;
     transition-property: color, background-color;
 }
-.btn:hover, .btn:focus, .btn:active {
+.btn:hover, .btn:focus, .btn:active, .toggle {
 	background-color: #ffffff;
 	color: #0dcaff;
 	opacity: 0.5;
+}
+
+#doneBtn {
+	background-color: #3ACF00;
+	border: 1px solid #3ACF00;
+}
+
+#doneBtn:hover, #doneBtn:focus, #doneBtn:active {
+	background-color: #ffffff;
+	color: #3ACF00;
+	opacity: 1.0;
 }

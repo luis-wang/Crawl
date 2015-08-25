@@ -14,11 +14,30 @@ document.addEventListener('DOMContentLoaded', function() {
 	}, 0);
 
 	$('#addFieldBtn').on('click', function() {
-		chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        	chrome.tabs.sendMessage(tabs[0].id, {message: "addColumnToNewDatabase"}, function(response) {
-        		console.log(response.message);
-        	});
-   		});
+			chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+	        	chrome.tabs.sendMessage(tabs[0].id, {message: "addColumnToNewDatabase"}, function(response) {
+	        		console.log(response.message);
+	        	});
+	   		});
+	   		$("#addButtonDiv").append("<a id='selector' class='btn'>Veld selecteren beginnen</a>");
+	});
+
+var togglePage = false;
+	$(document.body).on('click', "#selector",function() {
+			chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+	        	chrome.tabs.sendMessage(tabs[0].id, {message: "toggleSelectorMode"}, function(response) {
+	        		console.log(response.message);
+	        	});
+	   		});
+	   		$('#selector').toggleClass("toggle");
+	   		if(togglePage == false) {
+	   			$('#selector').html("Deabboneer");
+	   			togglePage = true;
+	   		}
+	   		else {
+	   			$('#selector').html("Veld selecteren beginnen");
+	   			togglePage = false;
+	   		}
 	});
 
 });

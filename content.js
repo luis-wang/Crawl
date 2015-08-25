@@ -5,6 +5,9 @@ var kMaxPages = 10;
 //Delay time between two requests in milliseconds
 var kDelayTimeBetweenRequest = 1000;
 
+//make message box for page
+$("body").append("<div id='messageBoxForScraper' style='background-color:#0dcaff;color:white;position:fixed;z-index:9001;top:100px;left:0px;width:400px;height:400px;padding:20px;border-radius: 0px 15px 15px 0px; display:none;font-family: 'Lato', sans-serif;font-weight: 400;font-size: 18px;text-align: center;'>Heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeey</div>");
+
 //Functions
 
 function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
@@ -93,17 +96,28 @@ function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData, re
     }, 'html');
 
 }
+var toggleClick = false;
+
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        if (request.message == "addColumnToNewDatabase") {
-            toggleClick = true;
+        if(request.message == "addColumnToNewDatabase") {
             sendResponse({message: "readyToAddColumn"});
+        }
+        if(request.message == "toggleSelectorMode") {
+            sendResponse({message: "readyToAddXPath"});
+            if(toggleClick == false) {
+                $("#messageBoxForScraper").toggle();
+                toggleClick = true;
+            }
+            else {
+                $("#messageBoxForScraper").toggle();
+                toggleClick = false;
+            }
         }
     }
 );
 
-var toggleClick = false;
 //Cancel all mouseover and click events; when a user clicks (for example) a hyperlink,
 //we want the link to be selected, but we don't want the hyperlink reference to be opened.
 $('body').on('click', function(e) {
@@ -115,17 +129,14 @@ document.addEventListener("mouseover", function( event ) {
     if(toggleClick==true) {
         // highlight the mouseover target
         if(!$(event.target).data('originalborder')) {
-            $(event.target).data('originalborder', event.target.style.border);
+            $(event.target).data('originalborder', event.target.style.boxShadow);
         }
-        event.target.style.border = "2px solid #0dcaff";
+        event.target.style.boxShadow = "0px 0px 0px 2px #0082AA";
     }
 }, false);
 
-
-document.addEventListener("mouseout", function(e) { 
-    if(toggleClick==true) {
-        e.target.style.border = $(e.target).data('originalborder');
-    }
+document.addEventListener("mouseout", function(e) {
+        e.target.style.boxShadow = $(e.target).data('originalborder');
 }, false);
 
 //add event listener for element selection click
