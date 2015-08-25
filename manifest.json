@@ -13,7 +13,8 @@
 	"content_scripts": [{
 		"matches": ["http://*/*", "https://*/*"],
       	"js": ["resources/jquery.min.js", "content.js"],
-      	"run_at": "document_end"
+      	"run_at": "document_end",
+      	"css" : ["font.css"]
 	}],
 
 	"browser_action": {

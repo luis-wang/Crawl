@@ -111,12 +111,11 @@ chrome.runtime.onMessage.addListener(
         }
         if(request.message == "toggleSelectorMode") {
             sendResponse({message: "readyToAddXPath"});
+            $("#messageBoxForScraper").toggle();
             if(toggleClick == false) {
-                $("#messageBoxForScraper").toggle();
                 toggleClick = true;
             }
             else {
-                $("#messageBoxForScraper").toggle();
                 toggleClick = false;
             }
         }
