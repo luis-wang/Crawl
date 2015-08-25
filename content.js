@@ -10,10 +10,13 @@ $("body").append("<div id='messageBoxForScraper' style='background-color:#0dcaff
 
 //Functions
 
+// var toType = function(obj) {
+//   return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+// }
+
 function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
     var returnArray = [];
-
     for (var i = 0; i < XPaths.length; i++) {
 
         var result = document.evaluate(XPaths[i], HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
@@ -21,11 +24,13 @@ function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
         var elementCount = 0;
         for (var node = result.iterateNext(); node != null; node = result.iterateNext()) {
 
+            //Fill array
             if (i == 0) {
                 var object = {};
                 object[columnNames[0]] = node.textContent;
                 returnArray.push(object);
             }
+            //Update array
             else {
                 var object = returnArray[elementCount];
                 object[columnNames[i]] = node.textContent;
@@ -33,7 +38,6 @@ function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
             }
 
             elementCount++;
-
         }
 
     }
@@ -42,7 +46,7 @@ function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
 }
 
-function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData, requestNumber) {
+function Crawl(URL, columnNames, XPaths, e, alreadyCrawledData, requestNumber) {
 
     // $('body').append('<div id="CrawlScrapeContentDiv" style="width:100%; height: 100%; background-color: red"></div>');
 
@@ -78,18 +82,19 @@ function Crawl(URL, columnNames, XPaths, paginationXPath, alreadyCrawledData, re
         else
             alreadyCrawledData = alreadyCrawledData.concat(pageData);
 
-        var result = document.evaluate(paginationXPath, HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
-        var nextPageNode = result.iterateNext();
-        if (requestNumber >= kMaxPages || nextPageNode == null || nextPageNode.textContent == null || nextPageNode.textContent == '#') {
+        var paginationXPath = getUniqueXPath(e.target, HTMLDocument);
+        
+        var nextPageHyperlink = document.evaluate(paginationXPath, HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
+
+        if (requestNumber >= kMaxPages || nextPageHyperlink == null || nextPageHyperlink.textContent == null || nextPageHyperlink.textContent == '#') {
             console.log(JSON.stringify(alreadyCrawledData));
         }
         else {
-
             d = new Date();
-            var delayTime = 1000 - d.getTime() + time;
+            var delayTime = kDelayTimeBetweenRequest - d.getTime() + time;
 
             setTimeout(function() {
-                Crawl(nextPageNode.textContent, columnNames, XPaths, paginationXPath, alreadyCrawledData, requestNumber);
+                Crawl(nextPageHyperlink.getAttribute('href'), columnNames, XPaths, e, alreadyCrawledData, requestNumber);
             }, delayTime);
         }
 
@@ -118,7 +123,7 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-//Cancel all mouseover and click events; when a user clicks (for example) a hyperlink,
+//Cancel all click events; when a user clicks (for example) a hyperlink,
 //we want the link to be selected, but we don't want the hyperlink reference to be opened.
 $('body').on('click', function(e) {
    if(toggleClick==true)
@@ -155,13 +160,60 @@ function printMousePos(e) {
         secondClick = getXPath(e.target);
     }
     else {
-        var paginationClick = getXPath(e.target);
-        var paginationXPath = matchShortestCommonXPath(paginationClick, paginationClick) + '/@href';
+        var finalXPath = matchShortestCommonXPath(firstClick, secondClick);
 
-        var firstFinalXPath = matchShortestCommonXPath(firstClick, secondClick);
         var columnNames = ['swagcolumn'];
-        var XPaths = [firstFinalXPath];
-        Crawl(document.URL, columnNames, XPaths, paginationXPath, null, 0);
+        var XPaths = [finalXPath];
+        Crawl(document.URL, columnNames, XPaths, e, null, 0);
+    }
+
+}
+
+//unique xpath lookup, used to find the unique xpath for the next button in the pagination box
+function getUniqueXPath(targetNode, HTMLDocument) {
+
+    var XPathElements = getXPath(targetNode);
+
+    var hyperlinkIndex = -1;
+    for (var i = 0; i < XPathElements.length && hyperlinkIndex == -1; i++) {
+        if (XPathElements[i].type == 'a') {
+            hyperlinkIndex = i;
+        }
+        else {
+            targetNode = targetNode.parentNode;
+        }
+    }
+
+    //remove elements inside hyperlink, if there are any.
+    XPathElements.splice(0, hyperlinkIndex);
+
+    var XPath = segmentsToXPathText(XPathElements);
+
+    var nrOfElementsWithXPath = document.evaluate('count(' + XPath + ')', HTMLDocument, null, XPathResult.TYPE_ANY, null).numberValue;
+    
+    if (nrOfElementsWithXPath == 1) {
+        return XPath;
+    }
+    else {
+        var att = [];
+        for (var i = 0; i < targetNode.attributes.length; i++) {
+            if (['href', 'id', 'class'].indexOf(targetNode.attributes[i].nodeName) == -1) {
+                att.push(targetNode.attributes[i]);
+            }
+        }
+        
+        for (var i = 0; i < att.length; i++) {
+
+            var newXPath = XPath + '[@' + att[i].nodeName + '="' + att[i].nodeValue + '"]';
+            nrOfElementsWithXPath = document.evaluate('count(' + newXPath + ')', HTMLDocument, null, XPathResult.TYPE_ANY, null).numberValue;
+
+            if (nrOfElementsWithXPath == 1) {
+                return newXPath;
+            }
+        }
+
+        return null;
+
     }
 
 }
@@ -171,38 +223,29 @@ function getXPath(targetNode) {
     for(var xpathSegments = []; targetNode != null && targetNode.localName != 'body' && targetNode.nodeType == 1; targetNode = targetNode.parentNode) {
         //if it has an id make the xpath specified to the id else class else clean tagname
 
-        var segment =   {'type' : targetNode.localName,
-                        'id' : null,
-                        'class' : null,
-                        'number' : null,
-                        'rel' : null};
+        var segment =   {'type' : targetNode.localName}
 
         if (segment.type != 'td' && segment.type != 'table') {
-            if (targetNode.hasAttribute('id')) {
-                segment.id = targetNode.getAttribute('id');
+            if (targetNode.hasAttribute('id') && targetNode.getAttribute('id') != '') {
+                segment['id'] = targetNode.getAttribute('id');
             }
-            else if (targetNode.hasAttribute('class')) {
-                segment.class = targetNode.getAttribute('class');
-            }
-            else if (targetNode.hasAttribute('rel')) {
-                segment.rel = targetNode.getAttribute('rel');
+            else if (targetNode.hasAttribute('class') && targetNode.getAttribute('class') != '') {
+                segment['class'] = targetNode.getAttribute('class');
             }
         }
         else {
             for (i = 1, sib = targetNode.previousSibling; sib; sib = sib.previousSibling) { 
-                if (sib.localName == targetNode.localName)
+                if (sib.localName == targetNode.localName) {
                     i++;
+                }
             }
-            segment.number = i;
+            segment['number'] = i;
         }
 
         xpathSegments.push(segment);
 
     }
-    //join the segments to get xpath text
-    //return segmentsToXPathText(xpathSegments);
 
-    //dont join and give segment array
     return xpathSegments;
 }
 
@@ -220,17 +263,13 @@ function segmentsToXPathText(XPathSegments) {
             var segment = XPathSegments[i];
             textToReturn += '/' + segment.type;
 
-            if (segment.number != null) {
-                textToReturn += '[' + segment.number + ']';
-            }
-            else if (segment.id != null) {
-                textToReturn += '[@id="' + segment.id + '"]';
-            }
-            else if (segment.class != null) {
-                textToReturn += '[@class="' + segment.class + '"]';
-            }
-            else if (segment.rel != null) {
-                textToReturn += '[@rel="' + segment.rel + '"]';
+            for (var property in segment) {
+                if (property == 'number') {
+                    textToReturn += '[' + segment[property] + ']';
+                }
+                else if (property != 'type') {
+                    textToReturn += '[@' + property + '="' + segment[property] + '"]';
+                }
             }
 
         }
@@ -256,31 +295,16 @@ function matchShortestCommonXPath(XPathSegments1, XPathSegments2) {
         }
         else {
             //We assume that the type of the segment in both arrays is the same. (this is almost always the case)
-            var finalSegment = {'type' : XPathSegments1[i].type,
-                                'id' : null,
-                                'class' : null,
-                                'number' : null,
-                                'rel' : null};
+            var finalSegment = {'type' : XPathSegments1[i].type};
 
-
-            //Add class if classes match
-            if (segment1.class == segment2.class) {
-                finalSegment.class = segment1.class;
+            if (segment1['number'] != null && segment1['number'] == segment2['number']) {
+                finalSegment['number'] = segment1.number;
             }
-
-            //Add id if id's match
-            if (segment1.id == segment2.id) {
-                finalSegment.id = segment1.id;
+            else if (segment1['id'] != null && segment1['id'] == segment2['id']) {
+                finalSegment['id'] = segment1['id'];
             }
-
-            //Add number if numbers match
-            if (segment1.number == segment2.number) {
-                finalSegment.number = segment1.number;
-            }
-
-            //Add rel if rels match
-            if (segment1.rel == segment2.rel) {
-                finalSegment.rel = segment1.rel;
+            else if (segment1['class'] != null && segment1['class'] == segment2['class']) {
+                finalSegment['class'] = segment1['class'];
             }
 
             result.push(finalSegment);
