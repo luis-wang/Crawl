@@ -5,6 +5,31 @@ var kMaxPages = 10;
 //Delay time between two requests in milliseconds
 var kDelayTimeBetweenRequest = 1000;
 
+add event listener for element selection click
+document.addEventListener('click', printMousePos);
+
+var firstClick;
+var secondClick;
+
+//get target element and print xpath of the element
+function printMousePos(e) {
+    if(toggleClick == true) {
+        if (firstClick == null) {
+            firstClick = getXPath(e.target);
+        }
+        else if (secondClick == null) {
+            secondClick = getXPath(e.target);
+        }
+        else {
+            var finalXPath = matchShortestCommonXPath(firstClick, secondClick);
+
+            var columnNames = ['swagcolumn'];
+            var XPaths = [finalXPath];
+            Crawl(document.URL, columnNames, XPaths, e, null, 0);
+        }
+    }
+}
+
 function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
     var returnArray = [];
