@@ -5,7 +5,7 @@ var kMaxPages = 10;
 //Delay time between two requests in milliseconds
 var kDelayTimeBetweenRequest = 1000;
 
-add event listener for element selection click
+// add event listener for element selection click
 document.addEventListener('click', printMousePos);
 
 var firstClick;
