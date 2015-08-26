@@ -6,7 +6,7 @@ var kMaxPages = 10;
 var kDelayTimeBetweenRequest = 1000;
 
 //make message box for page
-$("body").append("<div id='messageBoxForScraper' style='background-color:#0dcaff;color:white;position:fixed;z-index:9001;top:100px;left:0px;width:400px;height:400px;padding:20px;border-radius: 0px 15px 15px 0px; display:none;font-family: 'Lato', sans-serif;font-weight: 400;font-size: 18px;text-align: center;'>Heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeey</div>");
+$("body").append("<div id='messageBoxForScraper' style=\"background-color:#0dcaff;color:white;position:fixed;z-index:9001;top:100px;left:0px;width:200px;height:250px;padding:20px;border-radius: 0px 15px 15px 0px; display:none;font-family: 'Lato', sans-serif;font-weight: 400;font-size: 18px;text-align: center;\"></div>");
 
 //Functions
 
@@ -115,6 +115,7 @@ chrome.runtime.onMessage.addListener(
         if(request.message == "toggleSelectorMode") {
             sendResponse({message: "readyToAddXPath"});
             $("#messageBoxForScraper").toggle();
+            $("#messageBoxForScraper").html("Klik 2 elementen om het pad te matchen. Klik hierna op 'Klaar' om dit proces te voltooien.");
             if(toggleClick == false) {
                 toggleClick = true;
             }
@@ -154,21 +155,21 @@ var secondClick;
 
 //get target element and print xpath of the element
 function printMousePos(e) {
+    if(toggleClick == true) {
+        if (firstClick == null) {
+            firstClick = getXPath(e.target);
+        }
+        else if (secondClick == null) {
+            secondClick = getXPath(e.target);
+        }
+        else {
+            var finalXPath = matchShortestCommonXPath(firstClick, secondClick);
 
-    if (firstClick == null) {
-        firstClick = getXPath(e.target);
+            var columnNames = ['swagcolumn'];
+            var XPaths = [finalXPath];
+            Crawl(document.URL, columnNames, XPaths, e, null, 0);
+        }
     }
-    else if (secondClick == null) {
-        secondClick = getXPath(e.target);
-    }
-    else {
-        var finalXPath = matchShortestCommonXPath(firstClick, secondClick);
-
-        var columnNames = ['swagcolumn'];
-        var XPaths = [finalXPath];
-        Crawl(document.URL, columnNames, XPaths, e, null, 0);
-    }
-
 }
 
 //unique xpath lookup, used to find the unique xpath for the next button in the pagination box
