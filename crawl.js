@@ -1,13 +1,9 @@
-//Variables
+//Constanst
 
 //Maximum number of pages the crawler will load
-var kMaxRows = 100000;
+var kMaxPages = 10;
 //Delay time between two requests in milliseconds
 var kDelayTimeBetweenRequest = 1000;
-//Maximum crawl time in milliseconds
-var kMaxCrawlTime = 3000;
-
-//Functions
 
 //add event listener for element selection click
 document.addEventListener('click', printMousePos);
@@ -29,79 +25,98 @@ function printMousePos(e) {
 
             var columnNames = ['swagcolumn'];
             var XPaths = [finalXPath];
-            Crawl(null, document.URL, columnNames, XPaths, e, null, 0);
+            Crawl(document.URL, columnNames, XPaths, e, null, 0);
         }
     }
 }
 
-function Crawl(crawlStartTime, URL, columnNames, XPaths, e, alreadyCrawledData, requestNumber) {
+function getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument) {
 
-    if (crawlStartTime == null) {
-        crawlStartTime = new Date().getTime();
-    }
-
-    $.get(URL, function(HTMLString) {
-
-        var dataProcessingStartTime = new Date().getTime();
-
-        requestNumber++;
-        console.log(requestNumber);
-
-        var HTMLDocument = new DOMParser().parseFromString(HTMLString, "text/html");
-
-        alreadyCrawledData = appendDataToArray(alreadyCrawledData, columnNames, XPaths, HTMLDocument);
-
-        var paginationXPath = getUniqueXPath(e.target, HTMLDocument);
-        var nextPageHyperlink = document.evaluate(paginationXPath, HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
-
-        if (new Date().getTime() - crawlStartTime >= kMaxCrawlTime || alreadyCrawledData.length >= kMaxRows || nextPageHyperlink == null || nextPageHyperlink.textContent == null || nextPageHyperlink.textContent == '#') {
-            console.log(JSON.stringify(alreadyCrawledData));
-            console.log('count: ' + alreadyCrawledData.length);
-            return;
-        }
-        else {
-            //subtract processing time from delay time between requests, since processing time is basically part of the delay time.
-            var delayTime = kDelayTimeBetweenRequest - new Date().getTime() + dataProcessingStartTime;
-            setTimeout(function() {
-                Crawl(crawlStartTime, nextPageHyperlink.getAttribute('href'), columnNames, XPaths, e, alreadyCrawledData, requestNumber);
-            }, delayTime);
-        }
-
-    }, 'html');
-
-}
-
-function appendDataToArray(alreadyCrawledData, columnNames, XPaths, HTMLDocument) {
-
-    if (alreadyCrawledData == null)
-        alreadyCrawledData = [];
-
-    var startCount = alreadyCrawledData.length;
+    var returnArray = [];
     for (var i = 0; i < XPaths.length; i++) {
 
         var result = document.evaluate(XPaths[i], HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
 
-        var arrayCount = startCount;
-        for (var node = result.iterateNext(); node != null && arrayCount < kMaxRows; node = result.iterateNext()) {
+        var elementCount = 0;
+        for (var node = result.iterateNext(); node != null; node = result.iterateNext()) {
 
             //Fill array
             if (i == 0) {
                 var object = {};
                 object[columnNames[0]] = node.textContent;
-                alreadyCrawledData.push(object);
+                returnArray.push(object);
             }
             //Update array
             else {
-                var object = alreadyCrawledData[arrayCount];
+                var object = returnArray[elementCount];
                 object[columnNames[i]] = node.textContent;
-                alreadyCrawledData[arrayCount] = object;
+                returnArray[elementCount] = object;
             }
 
-            arrayCount++;
+            elementCount++;
         }
 
     }
 
-    return alreadyCrawledData;
+    return returnArray;
+
+}
+
+function Crawl(URL, columnNames, XPaths, e, alreadyCrawledData, requestNumber) {
+
+    // $('body').append('<div id="CrawlScrapeContentDiv" style="width:100%; height: 100%; background-color: red"></div>');
+
+    // $('#CrawlScrapeContentDiv').load('https://nrc.nl', function(response, status, xhr) {
+    //     if (status != "error") {
+
+    //         var HTMLString = $('#CrawlScrapeContentDiv').html();
+        
+    //         var parser = new DOMParser();
+    //         var HTMLDocument = parser.parseFromString(HTMLString, "text/html");
+
+    //         var title = getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument);
+    //         console.log(title);
+
+    //     }
+    // });
+
+    $.get(URL, function(HTMLString) {
+
+        var d = new Date();
+        var time = d.getTime();
+
+        requestNumber++;
+        console.log(requestNumber);
+
+        var parser = new DOMParser();
+        var HTMLDocument = parser.parseFromString(HTMLString, "text/html");
+
+        var pageData = getInnerHTMLFromXPath(columnNames, XPaths, HTMLDocument);
+
+        if (alreadyCrawledData == null)
+            alreadyCrawledData = pageData;
+        else
+            alreadyCrawledData = alreadyCrawledData.concat(pageData);
+
+        var paginationXPath = getUniqueXPath(e.target, HTMLDocument);
+        
+        var nextPageHyperlink = document.evaluate(paginationXPath, HTMLDocument, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null).iterateNext();
+
+        if (requestNumber >= kMaxPages || nextPageHyperlink == null || nextPageHyperlink.textContent == null || nextPageHyperlink.textContent == '#') {
+            for (var i = 0; i < alreadyCrawledData.length; i++) {
+                console.log('data: ' + alreadyCrawledData[i]['swagcolumn'] + '\n');
+            }
+            // console.log(JSON.stringify(alreadyCrawledData));
+        }
+        else {
+            d = new Date();
+            var delayTime = kDelayTimeBetweenRequest - d.getTime() + time;
+
+            setTimeout(function() {
+                Crawl(nextPageHyperlink.getAttribute('href'), columnNames, XPaths, e, alreadyCrawledData, requestNumber);
+            }, delayTime);
+        }
+
+    }, 'html');
 
 }
