@@ -1,11 +1,18 @@
 //make message box for page
-$("body").append("<div id='messageBoxForScraper' style=\"background-color:#0dcaff;color:white;position:fixed;z-index:9001;top:100px;left:0px;width:200px;height:250px;padding:20px;border-radius: 0px 15px 15px 0px; display:none;font-family: 'Lato', sans-serif;font-weight: 400;font-size: 18px;text-align: center;\"></div>");
+$("body").append("<div id='messageBoxForScraper'></div>");
+
+//Functions
+
+// var toType = function(obj) {
+//   return ({}).toString.call(obj).match(/\s([a-zA-Z]+)/)[1].toLowerCase()
+// }
 
 //toggle selection mode variable
 var toggleClick = false;
 
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
+<<<<<<< HEAD
         if (request.message == "addColumnToNewDatabase") {
             sendResponse({message: "readyToAddColumn"});
         }
@@ -14,6 +21,24 @@ chrome.runtime.onMessage.addListener(
             $("#messageBoxForScraper").toggle();
             $("#messageBoxForScraper").html("Klik 2 elementen om het pad te matchen. Klik hierna op 'Klaar' om dit proces te voltooien.");
             if (toggleClick == false) {
+=======
+        if(request.message == "toggleSelectorMode") {
+            sendResponse({message: "readyToAddXPath"});
+            $("#messageBoxForScraper").toggle();
+                //Look up / store database name
+                $('#databaseName').val(localStorage.getItem('databaseName'));
+                $('#databaseName').on('keyup', function() {
+                    var dbname = $('#databaseName').val();
+                    localStorage.setItem('databaseName', dbname);
+                });
+            $("#messageBoxForScraper").append("<h1 id=\"pageTitle\">Create database</h1>");
+            $("#messageBoxForScraper").append("<div id=\"gradientLine\"></div>");
+            $("#messageBoxForScraper").append("<input spellcheck=\"false\" type=\"text\" name=\"databaseName\" id=\"databaseName\" placeholder=\"Database name\" class=\"inputInBox\" style=\"margin:auto;\">");
+            $("#messageBoxForScraper").append("<div id=\"addButtonDiv\"></div>");
+            $("#messageBoxForScraper").append("<a id=\"addFieldBtn\" class=\"btn\">+ Add field to database</a>");
+            $("#messageBoxForScraper").append("<a id=\"doneBtn\" class=\"btn\">Klaar</a>");
+            if(toggleClick == false) {
+>>>>>>> origin/master
                 toggleClick = true;
             }
             else {

@@ -1,4 +1,4 @@
-//Variables
+//Constanst
 
 //Maximum number of pages the crawler will load
 var kMaxRows = 10000;
@@ -16,8 +16,6 @@ var lastNextPageBtnXPath;
 var alreadyCrawledData;
 var pageNumber;
 var timeSinceLastPageLoad;
-
-//Functions
 
 var firstClick;
 var secondClick;
@@ -64,8 +62,6 @@ function crawlPageIfNeeded() {
         else {
             Crawl();
         }
-    }
-}
 
 function Crawl() {
     pageNumber++;
@@ -107,32 +103,6 @@ function Crawl() {
 
 function appendDataToArray() {
 
-    var startCount = alreadyCrawledData.length;
-    for (var i = 0; i < XPaths.length; i++) {
-
-        var result = document.evaluate(XPaths[i], document, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
-
-        var arrayCount = startCount;
-        for (var node = result.iterateNext(); node != null && arrayCount < kMaxRows; node = result.iterateNext()) {
-
-            //Fill array
-            if (i == 0) {
-                var object = {};
-                object[columnNames[0]] = node.textContent;
-                alreadyCrawledData.push(object);
-            }
-            //Update array
-            else {
-                var object = alreadyCrawledData[arrayCount];
-                object[columnNames[i]] = node.textContent;
-                alreadyCrawledData[arrayCount] = object;
-            }
-
-            arrayCount++;
-        }
-
-    }
-
-    return alreadyCrawledData;
+    return returnArray;
 
 }
