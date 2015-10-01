@@ -12,7 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		// }, 300)
 
 		setTimeout(function() {
-			chrome.browserAction.setPopup({popup: "pages/createdb/index.html"});
+
+			//chrome.browserAction.setPopup({popup: "pages/createdb/index.html"});
 			window.location = '../createdb/index.html';
 		}, 300);
 

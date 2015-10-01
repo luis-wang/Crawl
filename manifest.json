@@ -10,6 +10,10 @@
 		"128": "resources/icon_128.png"
 	},
 
+    "background": {
+ 		"scripts": ["background.js"]
+	},
+
 	"content_scripts": [{
 		"matches": ["http://*/*", "https://*/*"],
       	"js": ["resources/jquery.min.js", "content.js", "crawl.js", "xpath.js"],
@@ -24,6 +28,7 @@
 	},
 
 	"permissions": [
+		"unlimitedStorage",
 		"storage",
 		"background",
 		"tabs",

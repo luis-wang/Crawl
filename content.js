@@ -4,17 +4,16 @@ $("body").append("<div id='messageBoxForScraper' style=\"background-color:#0dcaf
 //toggle selection mode variable
 var toggleClick = false;
 
-
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
-        if(request.message == "addColumnToNewDatabase") {
+        if (request.message == "addColumnToNewDatabase") {
             sendResponse({message: "readyToAddColumn"});
         }
-        if(request.message == "toggleSelectorMode") {
+        if (request.message == "toggleSelectorMode") {
             sendResponse({message: "readyToAddXPath"});
             $("#messageBoxForScraper").toggle();
             $("#messageBoxForScraper").html("Klik 2 elementen om het pad te matchen. Klik hierna op 'Klaar' om dit proces te voltooien.");
-            if(toggleClick == false) {
+            if (toggleClick == false) {
                 toggleClick = true;
             }
             else {
@@ -24,17 +23,41 @@ chrome.runtime.onMessage.addListener(
     }
 );
 
-//Cancel all click events; when a user clicks (for example) a hyperlink,
-//we want the link to be selected, but we don't want the hyperlink reference to be opened.
-$('body').on('click', function(e) {
-   if(toggleClick==true)
-        e.preventDefault();
+//Set cursor of all hyperlinks to pointer
+$('a').css('cursor', 'pointer');
+
+$("*").on('mouseenter', function() {
+    if (toggleClick == true) {
+        removeAttributeFromNode(this, 'onclick');
+        removeAttributeFromNode(this, 'href');
+    }
 });
+$("*").on('mouseleave', function() {
+    if (toggleClick == true) {
+        addAttributeToNode(this, 'storedonclick');
+        addAttributeToNode(this, 'storedhref');
+    }
+});
+function removeAttributeFromNode(element, attributeName) {
+    if (element.getAttribute(attributeName) != null) {
+        var att = element.getAttribute(attributeName);
+        element.setAttribute('stored' + attributeName, att);
+        element.removeAttribute(attributeName);
+    }
+}
+function addAttributeToNode(element, attributeName) {
+    if (element.getAttribute(attributeName) != null) {
+        var att = element.getAttribute(attributeName);
+        element.removeAttribute(attributeName);
+        var newAttributeName = attributeName.substring('stored'.length, attributeName.length);
+        element.setAttribute(newAttributeName, att);
+    }
+}
 
 document.addEventListener("mouseover", function( event ) {   
-    if(toggleClick==true) {
+    if (toggleClick == true) {
         // highlight the mouseover target
-        if(!$(event.target).data('originalborder')) {
+        if (!$(event.target).data('originalborder')) {
             $(event.target).data('originalborder', event.target.style.boxShadow);
         }
         event.target.style.boxShadow = "0px 0px 0px 2px #0082AA";
@@ -42,5 +65,5 @@ document.addEventListener("mouseover", function( event ) {
 }, false);
 
 document.addEventListener("mouseout", function(e) {
-        e.target.style.boxShadow = $(e.target).data('originalborder');
+    e.target.style.boxShadow = $(e.target).data('originalborder');
 }, false);

@@ -11,11 +11,12 @@ textarea, input {
 }
 input {
 	position: relative;
-	text-indent: 10px;
-	margin: 25px auto 0;
+	top: 18px;
+	padding-left: 10px;
+	margin: 10px auto 0;
 	display: block;
 	height: 46px;
-	width: 275px;
+	width: 265px;
 	border-radius: 3px;
 	border: solid 1px #0dcaff;
 	color: #868686;
@@ -38,13 +39,6 @@ input:focus {
     transition-property: opacity;
     opacity: 0.0;
 }
-#subcontainer {
-	-webkit-transition-duration: 0.3s;
-    transition-duration: 0.3s;
-    -webkit-transition-property: top;
-    transition-property: top;
-	background-color: white;
-}
 #pageTitle {
 	color: #0dcaff;
 	text-align: center;
@@ -59,11 +53,12 @@ input:focus {
 }
 .btn {
 	position: relative;
+	top: 18px;
 	width: 275px;
 	height: 46px;
 	background-color: #0dcaff;
 	display: block;
-	margin: 11px auto;
+	margin: 10px auto;
 	font-family: 'Lato', sans-serif;
 	font-weight: 400;
 	font-size: 18px;
@@ -85,13 +80,13 @@ input:focus {
 	opacity: 0.5;
 }
 
-#nextBtn {
-	background-color: #0dcaff;
-	border: 1px solid #0dcaff;
+#doneBtn {
+	background-color: #3ACF00;
+	border: 1px solid #3ACF00;
 }
 
-#nextBtn:hover, #nextBtn:focus, #nextBtn:active {
+#doneBtn:hover, #doneBtn:focus, #doneBtn:active {
 	background-color: #ffffff;
-	color: #0dcaff;
+	color: #3ACF00;
 	opacity: 1.0;
 }

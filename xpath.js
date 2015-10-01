@@ -1,5 +1,7 @@
+var kMaxXPathLength = 5;
+
 //unique xpath lookup, used to find the unique xpath for the next button in the pagination box
-function getUniqueXPath(targetNode, HTMLDocument) {
+function getUniqueXPath(targetNode) {
 
     var XPathElements = getXPath(targetNode);
 
@@ -13,15 +15,22 @@ function getUniqueXPath(targetNode, HTMLDocument) {
         }
     }
 
-    //remove elements inside hyperlink, if there are any.
+    //Remove everyting more specific than the hyperlink itself
     XPathElements.splice(0, hyperlinkIndex);
 
     var XPath = segmentsToXPathText(XPathElements);
-
-    var nrOfElementsWithXPath = document.evaluate('count(' + XPath + ')', HTMLDocument, null, XPathResult.TYPE_ANY, null).numberValue;
+    var nrOfElementsWithXPath = document.evaluate('count(' + XPath + ')', document, null, XPathResult.TYPE_ANY, null).numberValue;
     
     if (nrOfElementsWithXPath == 1) {
-        return XPath;
+
+        var i;
+        for (i = Math.min(XPathElements.length - 1, kMaxXPathLength); i > 1 && nrOfElementsWithXPath == 1; i--) {
+            var newXPath = segmentsToXPathText(XPathElements.slice(0, i));
+            nrOfElementsWithXPath = document.evaluate('count(' + newXPath + ')', document, null, XPathResult.TYPE_ANY, null).numberValue;
+        }
+
+        return segmentsToXPathText(XPathElements.slice(0, i));
+
     }
     else {
         var att = [];
@@ -34,7 +43,7 @@ function getUniqueXPath(targetNode, HTMLDocument) {
         for (var i = 0; i < att.length; i++) {
 
             var newXPath = XPath + '[@' + att[i].nodeName + '="' + att[i].nodeValue + '"]';
-            nrOfElementsWithXPath = document.evaluate('count(' + newXPath + ')', HTMLDocument, null, XPathResult.TYPE_ANY, null).numberValue;
+            nrOfElementsWithXPath = document.evaluate('count(' + newXPath + ')', document, null, XPathResult.TYPE_ANY, null).numberValue;
 
             if (nrOfElementsWithXPath == 1) {
                 return newXPath;
@@ -83,7 +92,7 @@ function segmentsToXPathText(XPathSegments) {
 
     if (XPathSegments.length > 0) {
 
-        XPathSegments = XPathSegments.slice(0, XPathSegments.length < 5 ? XPathSegments : 5);
+        XPathSegments = XPathSegments.slice(0, XPathSegments.length < kMaxXPathLength ? XPathSegments.length : kMaxXPathLength);
         XPathSegments.reverse();
 
         var textToReturn = '/';
